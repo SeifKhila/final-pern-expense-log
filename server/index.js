@@ -1,8 +1,11 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
 const PORT = 4000;
+const db = require("./db");
 
 app.use(cors());
 app.use(express.json());
@@ -12,11 +15,13 @@ const users = [];
 const sessions = {}; // ✅ FIX: define sessions
 
 // Temporary "database" for expenses
-const expenses = [];
+
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
+
+
 
 // Register
 app.post("/api/auth/register", (req, res) => {
@@ -82,67 +87,89 @@ function requireAuth(req, res, next) {
   next();
 }
 
-// GET expenses (for the logged in user)
-app.get("/api/expenses", requireAuth, (req, res) => {
-  const userExpenses = expenses.filter((e) => e.userId === req.userId);
-  return res.json({ expenses: userExpenses });
+app.get("/api/expenses", requireAuth, async (req, res, next) => {
+  try {
+    const result = await db.query(
+      'SELECT id, user_id AS "userId", title, amount, date FROM expenses WHERE user_id = $1 ORDER BY date DESC, id DESC',
+      [req.userId]
+    );
+
+    return res.json({ expenses: result.rows });
+  } catch (err) {
+    next(err);
+  }
 });
+
 
 // CREATE expense
-app.post("/api/expenses", requireAuth, (req, res) => {
-  const { title, amount, date } = req.body || {};
+app.post("/api/expenses", requireAuth, async (req, res, next) => {
+  try {
+    const { title, amount, date } = req.body || {};
 
-  if (!title || amount === undefined || amount === null || !date) {
-    return res.status(400).json({ message: "Title, amount, and date are required" });
+    if (!title || amount === undefined || amount === null || !date) {
+      return res
+        .status(400)
+        .json({ message: "Title, amount, and date are required" });
+    }
+
+    const result = await db.query(
+      'INSERT INTO expenses (user_id, title, amount, date) VALUES ($1, $2, $3, $4) RETURNING id, user_id AS "userId", title, amount, date',
+      [req.userId, title, Number(amount), date]
+    );
+
+    return res.status(201).json({ expense: result.rows[0] });
+  } catch (err) {
+    next(err);
   }
-
-  const newExpense = {
-    id: Date.now(),
-    userId: req.userId,
-    title,
-    amount: Number(amount),
-    date,
-  };
-
-  expenses.push(newExpense);
-  return res.status(201).json({ expense: newExpense });
 });
+
 
 // UPDATE expense (by id)
-app.put("/api/expenses/:id", requireAuth, (req, res) => {
-  const id = Number(req.params.id);
-  const { title, amount, date } = req.body || {};
+app.put("/api/expenses/:id", requireAuth, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const { title, amount, date } = req.body || {};
 
-  if (!title || amount === undefined || amount === null || !date) {
-    return res.status(400).json({ message: "Title, amount, and date are required" });
+    if (!title || amount === undefined || amount === null || !date) {
+      return res
+        .status(400)
+        .json({ message: "Title, amount, and date are required" });
+    }
+
+    const result = await db.query(
+      'UPDATE expenses SET title = $1, amount = $2, date = $3 WHERE id = $4 AND user_id = $5 RETURNING id, user_id AS "userId", title, amount, date',
+      [title, Number(amount), date, id, req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    return res.json({ expense: result.rows[0] });
+  } catch (err) {
+    next(err);
   }
-
-  // ✅ FIX: ensure user can only edit their own expense
-  const expense = expenses.find((e) => e.id === id && e.userId === req.userId);
-
-  if (!expense) {
-    return res.status(404).json({ message: "Expense not found" });
-  }
-
-  expense.title = title;
-  expense.amount = Number(amount);
-  expense.date = date;
-
-  return res.json({ expense });
 });
 
-// DELETE expense (by id)
-app.delete("/api/expenses/:id", requireAuth, (req, res) => {
-  const id = Number(req.params.id);
+app.delete("/api/expenses/:id", requireAuth, async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
 
-  const index = expenses.findIndex((e) => e.id === id && e.userId === req.userId);
-  if (index === -1) {
-    return res.status(404).json({ message: "Expense not found" });
+    const result = await db.query(
+      "DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING id",
+      [id, req.userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Expense not found" });
+    }
+
+    return res.json({ message: "Expense deleted" });
+  } catch (err) {
+    next(err);
   }
-
-  expenses.splice(index, 1);
-  return res.json({ message: "Expense deleted" });
 });
+
 
 // Error handler (keep LAST, before listen)
 app.use((err, req, res, next) => {
