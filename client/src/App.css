@@ -1,38 +1,293 @@
-.App {
+/* =========================
+   Theme (60–30–10)
+   ========================= */
+:root {
+  /* 60–30–10 palette */
+  --bg: #FCDCD5;        /* 60% background */
+  --surface: #ECD185;   /* 30% cards */
+  --accent: #D26611;    /* 10% buttons / highlights */
+
+  /* Text */
+  --text: #35465D;
+  --muted: #6B7280;
+
+  /* UI helpers */
+  --border: rgba(53, 70, 93, 0.18);
+  --danger: #B91C1C;
+  --dangerBg: rgba(185, 28, 28, 0.12);
+}
+
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.page {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.card {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 22px;
+  margin-bottom: 22px;
+  border: 1px solid var(--border);
+}
+
+.card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+
+/* =========================
+   Buttons
+   ========================= */
+.btn {
+  background: var(--accent);
+  color: white;
+  border: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn:hover {
+  filter: brightness(0.95);
+}
+
+/* Delete button style (still matches the theme) */
+.btnDanger {
+  background: white;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btnDanger:hover {
+  background: #FFECEC;
+}
+
+/* =========================
+   Messages
+   ========================= */
+.error {
+  padding: 10px 12px;
+  background: #FFECEC;
+  border: 1px solid #F1B4B4;
+  border-radius: 12px;
+}
+
+.expenseRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+
+.expenseRow:last-child {
+  border-bottom: none;
+}
+
+.expenseText {
+  line-height: 1.4;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 520px;
+}
+
+.formRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.formRow label {
+  width: 80px;
+  font-weight: 600;
+}
+
+.formRow input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.formRow input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 102, 17, 0.25);
+}
+
+/* =========================
+   Header (App title + status)
+   ========================= */
+.appTitle {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.statusBadge {
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =========================
+   Small theme tidy-ups
+   ========================= */
+.expenseRow {
+  border-bottom: 1px solid var(--border);
+}
+
+.controls {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.controlLabel {
+  font-weight: 600;
+}
+
+.controls select {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+}
+
+.controls select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 102, 17, 0.25);
+}
+
+.summaryBig {
+  font-size: 18px;
+  margin: 10px 0 0;
+}
+
+.expenseActions {
+  display: flex;
+  gap: 10px;
+}
+
+.editFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.editFields input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text);
+}
+
+.editFields input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(210, 102, 17, 0.25);
+}
+
+/* =========================
+   Auth pages (Login / Register)
+   ========================= */
+
+.authPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.authCard {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 32px;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--border);
+}
+
+.authTitle {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.authSubtitle {
+  margin-bottom: 24px;
+  color: var(--muted);
+}
+
+.authActions {
+  margin-top: 16px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.authLink {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.authLink:hover {
+  text-decoration: underline;
 }
