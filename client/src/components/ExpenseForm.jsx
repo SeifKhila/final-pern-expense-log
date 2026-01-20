@@ -33,6 +33,7 @@ function ExpenseForm({ onExpenseCreated }) {
       setIsLoading(false);
     }
   }
+    const canSubmit = title.trim() && amount !== "" && date;
 
   return (
     <div>
@@ -71,14 +72,16 @@ function ExpenseForm({ onExpenseCreated }) {
     />
   </div>
 
- <button className="btn" type="submit" disabled={isLoading}>
+<button className="btn" type="submit" disabled={isLoading || !canSubmit}>
   {isLoading ? "Adding..." : "Add Expense"}
 </button>
+
 
 </form>
 
 
-      {error && <p>{error}</p>}
+      {error && <p className="error">{error}</p>}
+
     </div>
   );
 }

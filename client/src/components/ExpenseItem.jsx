@@ -1,12 +1,32 @@
 import { useState } from 'react';
 import { updateExpense } from '../api/expenses';
 
+function formatDisplayDate(dateValue) {
+  if (!dateValue) return '';
+
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return String(dateValue);
+
+  return d.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function toDateInputValue(dateValue) {
+  if (!dateValue) return '';
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
 function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
   const [isEditing, setIsEditing] = useState(false);
 
   const [title, setTitle] = useState(expense.title);
   const [amount, setAmount] = useState(String(expense.amount));
-  const [date, setDate] = useState(expense.date);
+  const [date, setDate] = useState(toDateInputValue(expense.date));
 
   const [error, setError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -14,8 +34,7 @@ function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
   function handleCancel() {
     setTitle(expense.title);
     setAmount(String(expense.amount));
-    setDate(expense.date);
-
+    setDate(toDateInputValue(expense.date));
     setError('');
     setIsEditing(false);
   }
@@ -28,10 +47,7 @@ function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
       await updateExpense(expense.id, { title, amount, date });
 
       setIsEditing(false);
-
-      if (onExpenseUpdated) {
-        onExpenseUpdated();
-      }
+      if (onExpenseUpdated) onExpenseUpdated();
     } catch (err) {
       setError(err.message || 'Could not update expense');
     } finally {
@@ -44,7 +60,8 @@ function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
     return (
       <div className="expenseRow">
         <div className="expenseText">
-          <strong>{expense.title}</strong> — {expense.amount} — {expense.date}
+          <strong>{expense.title}</strong> — {Number(expense.amount).toFixed(2)} —{' '}
+          {formatDisplayDate(expense.date)}
         </div>
 
         <div className="expenseActions">
@@ -52,25 +69,39 @@ function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
             Edit
           </button>
 
-          <button
-            className="btnDanger"
-            type="button"
-            onClick={() => onDeleteExpense(expense.id)}
-          >
+         <button
+         className="btnDanger"
+         type="button"
+        onClick={() => {
+         const ok = window.confirm(`Delete "${expense.title}"?`);
+         if (ok) onDeleteExpense(expense.id);
+        }}
+>
             Delete
-          </button>
+         </button>
+
         </div>
       </div>
     );
   }
 
   // EDIT MODE
-  return (
-    <div className="expenseRow">
-      <div className="editFields">
+       return (
+        <div className="expenseRow">
+        <div className="editFields">
         <input value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <input value={date} onChange={(e) => setDate(e.target.value)} />
+
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
 
         {error && <p className="error">{error}</p>}
       </div>
@@ -89,6 +120,7 @@ function ExpenseItem({ expense, onDeleteExpense, onExpenseUpdated }) {
 }
 
 export default ExpenseItem;
+
 
 
 
