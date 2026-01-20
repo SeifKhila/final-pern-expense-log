@@ -1,7 +1,9 @@
 require("dotenv").config();
 
+
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 
 const app = express();
 const PORT = 4000;
@@ -10,11 +12,9 @@ const db = require("./db");
 app.use(cors());
 app.use(express.json());
 
-// Temporary "database" (in-memory)
-const users = [];
-const sessions = {}; // ✅ FIX: define sessions
 
-// Temporary "database" for expenses
+
+const sessions = {}; //  FIX: define sessions
 
 
 app.get("/api/health", (req, res) => {
@@ -24,48 +24,73 @@ app.get("/api/health", (req, res) => {
 
 
 // Register
-app.post("/api/auth/register", (req, res) => {
-  const { email, password } = req.body || {};
+app.post("/api/auth/register", async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // 1) Check if email already exists in DB
+    const existing = await db.query("SELECT id FROM users WHERE email = $1", [email]);
+    if (existing.rowCount > 0) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    // 2) Hash the password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // 3) Insert the user
+    const result = await db.query(
+      "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email",
+      [email, passwordHash]
+    );
+
+    return res.status(201).json({ message: "User registered successfully", user: result.rows[0] });
+  } catch (err) {
+    next(err);
   }
-
-  const existingUser = users.find((user) => user.email === email);
-  if (existingUser) {
-    return res.status(409).json({ message: "User already exists" });
-  }
-
-  const newUser = {
-    id: Date.now(),
-    email,
-    password,
-  };
-
-  users.push(newUser);
-  return res.status(201).json({ message: "User registered successfully" });
 });
+
 
 // Login
-app.post("/api/auth/login", (req, res) => {
-  const { email, password } = req.body || {};
+app.post("/api/auth/login", async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
 
-  if (!email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    // 1) Find user by email
+    const result = await db.query(
+      "SELECT id, email, password_hash FROM users WHERE email = $1",
+      [email]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    const user = result.rows[0];
+
+    // 2) Compare password to hash
+    const matches = await bcrypt.compare(password, user.password_hash);
+    if (!matches) {
+      return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    // 3) Create session token (still in-memory)
+    const token = `fake-token-${Date.now()}`;
+    sessions[token] = { userId: user.id };
+
+    return res.json({ token });
+  } catch (err) {
+    next(err);
   }
-
-  const user = users.find((u) => u.email === email);
-  if (!user || user.password !== password) {
-    return res.status(401).json({ message: "Invalid email or password" });
-  }
-
-  const token = `fake-token-${Date.now()}`;
-
-  // ✅ FIX: save the session properly
-  sessions[token] = { userId: user.id };
-
-  return res.json({ token });
 });
+
 
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization || "";
@@ -112,10 +137,16 @@ app.post("/api/expenses", requireAuth, async (req, res, next) => {
         .json({ message: "Title, amount, and date are required" });
     }
 
-    const result = await db.query(
-      'INSERT INTO expenses (user_id, title, amount, date) VALUES ($1, $2, $3, $4) RETURNING id, user_id AS "userId", title, amount, date',
-      [req.userId, title, Number(amount), date]
-    );
+    const parsedAmount = Number(amount);
+if (Number.isNaN(parsedAmount)) {
+  return res.status(400).json({ message: "Amount must be a number" });
+}
+
+const result = await db.query(
+  'INSERT INTO expenses (user_id, title, amount, date) VALUES ($1, $2, $3, $4) RETURNING id, user_id AS "userId", title, amount, date',
+  [req.userId, title, parsedAmount, date]
+);
+
 
     return res.status(201).json({ expense: result.rows[0] });
   } catch (err) {
@@ -136,10 +167,16 @@ app.put("/api/expenses/:id", requireAuth, async (req, res, next) => {
         .json({ message: "Title, amount, and date are required" });
     }
 
-    const result = await db.query(
-      'UPDATE expenses SET title = $1, amount = $2, date = $3 WHERE id = $4 AND user_id = $5 RETURNING id, user_id AS "userId", title, amount, date',
-      [title, Number(amount), date, id, req.userId]
-    );
+ const parsedAmount = Number(amount);
+if (Number.isNaN(parsedAmount)) {
+  return res.status(400).json({ message: "Amount must be a number" });
+}
+
+const result = await db.query(
+  'UPDATE expenses SET title = $1, amount = $2, date = $3 WHERE id = $4 AND user_id = $5 RETURNING id, user_id AS "userId", title, amount, date',
+  [title, parsedAmount, date, id, req.userId]
+);
+
 
     if (result.rowCount === 0) {
       return res.status(404).json({ message: "Expense not found" });
@@ -177,6 +214,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
+
