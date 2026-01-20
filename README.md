@@ -1,92 +1,107 @@
-Front-End Mockup (UI Planning)
+# PERN Expense Log App
 
-Before starting to code, I planned the front-end structure of the application to clearly understand what pages and components were needed and how data would flow through the app. This helped me avoid confusion later and made the implementation easier.
+This is a full-stack expense tracking application built as part of my
+Codecademy Full-Stack Engineer course.
 
-Pages (Routes)
+Before starting to code, I planned the front-end structure first so I could
+clearly understand what pages and components were needed and how data would
+flow through the app. This helped avoid confusion later and made the build
+much smoother.
+
+The project is focused on building a clean and simple PERN application with
+authentication, protected routes, and PostgreSQL persistence.
+
+---
+
+## Tech Stack
+- React (frontend)
+- Node.js & Express (backend)
+- PostgreSQL (Neon)
+- JWT authentication
+- Fetch API
+- Custom CSS
+
+---
+
+## Main Features
+- User registration and login
+- Authentication with protected routes
+- Dashboard for managing expenses
+- Expenses scoped per logged-in user
+- Data persisted in PostgreSQL
+- Clear separation between client and server
+
+---
+
+## Pages (Routes)
 
 The application has three main pages:
 
-Register Page
+**Register Page**  
 Allows a new user to create an account.
 
-Login Page
+**Login Page**  
 Allows an existing user to log in and receive an authentication token.
 
-Dashboard Page (/app)
-The main page of the application where the user can view and manage their expenses.
+**Dashboard Page (/app)**  
+The main page of the application where the user can view and manage their
+expenses. This page is protected and only accessible when logged in.
 
-Dashboard Layout
+---
 
-The dashboard is designed to be simple and clear:
-
-A header showing the application name and a logout button
-
-A summary section displaying the total amount spent
-
-A form to add a new expense (amount, category, date, optional note)
-
-A list of all the user’s expenses, with options to edit or delete each one
-
-This layout keeps all important information visible without unnecessary complexity.
-
-React Components
-
-The front end is broken down into reusable React components:
-
-Page components
-
-LoginPage
-
-RegisterPage
-
-DashboardPage
-
-Dashboard components
-
-Header
-
-Summary
-
-ExpenseForm
-
-ExpenseList
-
-ExpenseItem
-
-Each component has a single responsibility, which makes the code easier to read and maintain.
-
-Component Hierarchy
-
-The planned component structure is:
-
-App
- ├─ Header
- └─ DashboardPage
-     ├─ Summary
-     ├─ ExpenseForm
-     └─ ExpenseList
-          └─ ExpenseItem
-
-State Management Plan
-
-State is placed based on how it is shared between components:
-
-User authentication state is stored at the top level so it is accessible throughout the app.
-
-Expenses state is stored in the DashboardPage because it is shared between the summary, form, and list.
-
-Individual components such as ExpenseItem only handle local UI state (for example, edit mode).
-
-I followed the principle of keeping state as high as needed, but as low as possible to keep components predictable and reusable.
-
-Why This Approach
-
-Planning the UI and component hierarchy before coding helped me:
-
-understand the structure of the app clearly
+## Project Structure
 
 decide where state should live
 
 reduce unnecessary refactoring later
 
 make the application easier to explain in interviews
+
+---
+
+## Running the App Locally
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/SeifKhila/final-pern-expense-log.git
+cd final-pern-expense-log
+
+2. Install dependencies
+
+cd client
+npm install
+cd ../server
+npm install
+
+3. Environment variables
+
+Create a .env file inside the server folder with:
+
+DATABASE_URL=your_postgres_url
+JWT_SECRET=your_secret
+
+4. Run the application
+
+# start the server
+npm run dev
+
+# start the client (new terminal)
+npm start
+
+What I Learned
+
+* How to structure a full-stack PERN application
+
+* Handling authentication and protected routes
+
+* Connecting a React frontend to a PostgreSQL backend
+
+* Managing user-specific data securely
+
+* Debugging issues across the full stack
+
+* This project helped solidify my understanding of how a full-stack application
+works from frontend to database.
+
+
+
