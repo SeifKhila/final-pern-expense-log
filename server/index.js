@@ -229,13 +229,11 @@ app.use((err, req, res, next) => {
 
 // only listen when running directly (makes testing easier)
 if (require.main === module) {
- const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
-
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 }
+
 
 module.exports = app;
 
